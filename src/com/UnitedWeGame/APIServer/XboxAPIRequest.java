@@ -1,27 +1,26 @@
 package com.UnitedWeGame.APIServer;
 
 import com.UnitedWeGame.InformationObjects.Game;
+import com.UnitedWeGame.InformationObjects.UserOnlineFeed;
 import com.UnitedWeGame.UserClasses.Friend;
 import com.UnitedWeGame.UserClasses.Person;
+import com.UnitedWeGame.Utils.DatabaseConnectionUtil;
 import com.UnitedWeGame.Utils.JsonUtil;
-import net.sf.ezmorph.bean.MorphDynaBean;
-import org.apache.commons.beanutils.BasicDynaBean;
+import com.UnitedWeGame.Utils.Property;
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 
-import java.nio.charset.StandardCharsets;
+import java.net.URLEncoder;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Created by cweeter on 3/10/17.
@@ -30,8 +29,6 @@ public class XboxAPIRequest extends APIInterface {
 
     public static final String XBOX_ONE = "Xbox One";
     public static final String XBOX_360 = "Xbox 360";
-
-    public static final int THREAD_LENGTH = 4;
 
 
     public XboxAPIRequest()
@@ -49,7 +46,7 @@ public class XboxAPIRequest extends APIInterface {
             HttpGet request = new HttpGet(url);
 
             // add request header
-            request.addHeader("X-AUTH", "be3dfb722ca064ff46e1187b1d7894a83c8e922a");
+            request.addHeader("X-AUTH", Property.XBOX_API_TOKEN);
             HttpResponse response = client.execute(request);
 
             System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
@@ -68,7 +65,10 @@ public class XboxAPIRequest extends APIInterface {
             List<Friend> friendsList = new ArrayList<>();
 
 
+            List<Thread> threads = new ArrayList<>();
+
             final int threadSize = 1 + (dynaBeans.size()/18);
+            List<UserOnlineFeed> onlineFriends = new ArrayList<>();
 
             for(int i = 0; i < dynaBeans.size() ; i += threadSize)
             {
@@ -81,41 +81,121 @@ public class XboxAPIRequest extends APIInterface {
                         @Override
                         public void run() {
 
-                            List<DynaBean> friendsList = dynaBeans.subList(j, (j + threadSize - 1 < dynaBeans.size()) ? j + threadSize - 1 : dynaBeans.size());
+                            List<DynaBean> friendsList = dynaBeans.subList(j, (j + threadSize < dynaBeans.size()) ? j + threadSize : dynaBeans.size());
+
+                            //System.out.println("J is: " + j + "listSize is: " + friendsList.size());
 
                             try {
 
                                 for(DynaBean friend : friendsList) {
 
-                                    Friend friendObj = new Friend();
-                                    friendObj.setGamertag(friend.get("Gamertag").toString());
-                                    DynaBean additionalInfoBean = additionalFriendInformation(friend.get("hostId").toString());
+                                    try {
+                                        Friend friendObj = new Friend();
+//
+                                        friendObj.setGamertag(friend.get("Gamertag").toString());
 
-                                    friendObj.setIsOnline((additionalInfoBean.get("state").toString().toLowerCase() == "online"));
+                                        DynaBean additionalInfoBean = additionalFriendInformation(friend.get("hostId").toString());
 
-                                    System.out.println(friendObj.getGamertag() + ":\t" + additionalInfoBean.get("state"));
+                                        if (additionalInfoBean.get("state").toString().toLowerCase().equals("online")) {
+                                            List<DynaBean> devicesList = (List<DynaBean>) additionalInfoBean.get("devices");
 
-                                    //friendsList.add(friendObj);
+                                            DynaBean gameInfo = ((DynaBean) devicesList.get(devicesList.size() - 1));
+                                            String type = gameInfo.get("type").toString();
+                                            String platform = (StringUtils.equals(type, "XboxOne") ? "Xbox One" : "Xbox 360");
+
+
+                                            List<DynaBean> gameInfoTitles = (List<DynaBean>) gameInfo.get("titles");
+
+                                            if (gameInfoTitles.size() != 1) {
+
+                                                DynaBean gameTitleInfo = ((DynaBean) gameInfoTitles.get(gameInfoTitles.size() - 1));
+
+                                                String gameTitle = gameTitleInfo.get("name").toString();
+
+                                                friendObj.setIsOnline(true);
+
+                                                DatabaseConnectionUtil dbcu = new DatabaseConnectionUtil();
+
+                                                long gameID = dbcu.getGameID(gameTitle, platform);
+
+                                                if (gameID == -1) {
+
+                                                    String imageUrl = new IgdbAPIService().getGameImage(gameTitle);
+
+                                                    dbcu.insertGameIntoDb(gameTitle, platform, imageUrl);
+
+                                                    gameID = dbcu.getGameID(gameTitle, platform);
+                                                }
+
+                                                onlineFriends.add(new UserOnlineFeed(person.getUserId(), gameID, friendObj.getGamertag()));
+
+                                                System.out.println(friendObj.getGamertag() + ":\t" + additionalInfoBean.get("state") + " PLAYING: " + gameTitle);
+                                            } else {
+                                                System.out.println(friendObj.getGamertag());
+
+                                                if (platform == XBOX_ONE)
+                                                    onlineFriends.add(new UserOnlineFeed(person.getUserId(), 999998, friendObj.getGamertag()));
+
+                                                else
+                                                    onlineFriends.add(new UserOnlineFeed(person.getUserId(), 999999, friendObj.getGamertag()));
+                                            }
+                                        }
+
+                                        //friendsList.add(friendObj);
+                                    }
+                                    catch(Exception ex)
+                                    {
+                                        ex.printStackTrace();
+                                    }
                                 }
 
                             }
                             catch(Exception ex)
                             {
+                                ex.printStackTrace();
 
                             }
+
 
                         }
 
                     });
 
-                    thread.start();
+                    threads.add(thread);
 
+                    thread.start();
                 }
                 catch (Exception ex)
                 {
-
+                    ex.printStackTrace();
                 }
 
+
+            }
+
+            DatabaseConnectionUtil dbcu = new DatabaseConnectionUtil();
+
+            for(Thread thread : threads)
+            {
+                thread.join();
+            }
+
+            Connection c = dbcu.deleteOldOnlineFeed(person);
+
+            for(UserOnlineFeed feed : onlineFriends)
+            {
+                dbcu.insertIntoOnlineFeed(feed.getUserId(), feed.getGamertag(), feed.getGameId(), c);
+            }
+
+
+            try{
+                c.commit();
+                c.setAutoCommit(true);
+                c.close();
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
 
             }
 
@@ -123,11 +203,15 @@ public class XboxAPIRequest extends APIInterface {
         }
         catch (Exception ex)
         {
+            ex.printStackTrace();
+
             return new ArrayList<>();
         }
     }
 
     public DynaBean additionalFriendInformation(String identifier) throws Exception {
+
+        //identifier = "2535414092388400";
 
         String url = getBaseApiUrl() + identifier + "/presence";
 
@@ -136,7 +220,7 @@ public class XboxAPIRequest extends APIInterface {
             HttpGet request = new HttpGet(url);
 
             // add request header
-            request.addHeader("X-AUTH", "be3dfb722ca064ff46e1187b1d7894a83c8e922a");
+            request.addHeader("X-AUTH", Property.XBOX_API_TOKEN);
             HttpResponse response = client.execute(request);
 
             //System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
@@ -157,6 +241,8 @@ public class XboxAPIRequest extends APIInterface {
         }
         catch (Exception ex)
         {
+            ex.printStackTrace();
+
             throw new Exception("Friend Presence call failed: " + ex);
         }
 
@@ -166,16 +252,54 @@ public class XboxAPIRequest extends APIInterface {
 
     public List<Game> getGameLibrary(Person person) {
 
-        List<Game> games = getXboxOneGames(person.getXboxIdentifier());
+        List<Game> games = getXboxOneGames(person.getXboxIdentifier(), person.getUserId());
 
-        games.addAll(getXbox360Games(person.getXboxIdentifier()));
+        games.addAll(getXbox360Games(person.getXboxIdentifier(), person.getUserId()));
 
         return games;
 
     }
 
-    public String getIdentifier() {
-        return null;
+    public String getIdentifier(Person person)
+    {
+        String identifier = "";
+
+        try {
+
+            ;
+
+            String url = getBaseApiUrl() + "xuid/" + URLEncoder.encode(person.getXboxGamertag().trim(), "UTF-8");
+
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpGet request = new HttpGet(url);
+
+            // add request header
+            request.addHeader("X-AUTH", Property.XBOX_API_TOKEN);
+            HttpResponse response = client.execute(request);
+
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(response.getEntity().getContent()));
+
+            StringBuffer result = new StringBuffer();
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+
+            return result.toString();
+
+
+
+
+        }
+        catch(Exception ex)
+        {
+            System.err.println("Err: " + ex.getMessage());
+            ex.printStackTrace();
+
+            return "";
+        }
+
     }
 
     /**
@@ -183,7 +307,7 @@ public class XboxAPIRequest extends APIInterface {
      *  Helper Methods
      */
 
-    private List<Game> getXboxOneGames(String identifier)
+    private List<Game> getXboxOneGames(String identifier, long userId)
     {
         List<Game> games = new ArrayList<>();
 
@@ -195,7 +319,7 @@ public class XboxAPIRequest extends APIInterface {
             HttpGet request = new HttpGet(url);
 
             // add request header
-            request.addHeader("X-AUTH", "be3dfb722ca064ff46e1187b1d7894a83c8e922a");
+            request.addHeader("X-AUTH", Property.XBOX_API_TOKEN);
             HttpResponse response = client.execute(request);
 
             BufferedReader rd = new BufferedReader(
@@ -209,6 +333,9 @@ public class XboxAPIRequest extends APIInterface {
 
             List<DynaBean> dynaBeans = new JsonUtil().decodeJsonList(result.toString());
 
+            DatabaseConnectionUtil dbcu = new DatabaseConnectionUtil();
+            IgdbAPIService igdb = new IgdbAPIService();
+
             for(DynaBean game : (List<DynaBean>)dynaBeans.get(0).get("titles"))
             {
                 Game currentGame = new Game();
@@ -216,6 +343,20 @@ public class XboxAPIRequest extends APIInterface {
                 currentGame.setPlatform(XBOX_ONE);
                 currentGame.setIsOwned(true);
                 currentGame.setTitle(game.get("name").toString());
+
+                if(dbcu.getGameID(currentGame.getTitle(), XBOX_ONE) == -1)
+                {
+                    String imageUrl = igdb.getGameImage(currentGame.getTitle());
+
+                    dbcu.insertGameIntoDb(currentGame.getTitle(), XBOX_ONE, imageUrl);
+
+                }
+
+                long gameID = dbcu.getGameID(currentGame.getTitle(), XBOX_ONE);
+
+                if(!dbcu.userOwnsGame(userId, gameID))
+                    dbcu.addGameToUserLibrary(userId, gameID);
+
 
                 games.add(currentGame);
 
@@ -226,12 +367,14 @@ public class XboxAPIRequest extends APIInterface {
         }
         catch(Exception ex)
         {
+            ex.printStackTrace();
+
             return games;
         }
 
     }
 
-    private List<Game> getXbox360Games(String identifier)
+    private List<Game> getXbox360Games(String identifier, long userId)
     {
         List<Game> games = new ArrayList<>();
 
@@ -243,7 +386,7 @@ public class XboxAPIRequest extends APIInterface {
             HttpGet request = new HttpGet(url);
 
             // add request header
-            request.addHeader("X-AUTH", "be3dfb722ca064ff46e1187b1d7894a83c8e922a");
+            request.addHeader("X-AUTH", Property.XBOX_API_TOKEN);
             HttpResponse response = client.execute(request);
 
             BufferedReader rd = new BufferedReader(
@@ -256,6 +399,8 @@ public class XboxAPIRequest extends APIInterface {
             }
 
             List<DynaBean> dynaBeans = new JsonUtil().decodeJsonList(result.toString());
+            DatabaseConnectionUtil dbcu = new DatabaseConnectionUtil();
+            IgdbAPIService igdb = new IgdbAPIService();
 
             for(DynaBean game : (List<DynaBean>)dynaBeans.get(0).get("titles"))
             {
@@ -265,6 +410,19 @@ public class XboxAPIRequest extends APIInterface {
                 currentGame.setIsOwned(true);
                 currentGame.setTitle(game.get("name").toString());
 
+                if(dbcu.getGameID(currentGame.getTitle(), XBOX_360) == -1)
+                {
+                    String imageUrl = igdb.getGameImage(currentGame.getTitle());
+
+                    dbcu.insertGameIntoDb(currentGame.getTitle(), XBOX_360, imageUrl);
+
+                }
+
+                long gameID = dbcu.getGameID(currentGame.getTitle(), XBOX_360);
+
+                if(!dbcu.userOwnsGame(userId, gameID))
+                    dbcu.addGameToUserLibrary(userId, gameID);
+
                 games.add(currentGame);
             }
 
@@ -272,6 +430,8 @@ public class XboxAPIRequest extends APIInterface {
         }
         catch(Exception ex)
         {
+            ex.printStackTrace();
+
             return games;
         }
 

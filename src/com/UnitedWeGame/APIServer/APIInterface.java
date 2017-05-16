@@ -28,7 +28,7 @@ public abstract class APIInterface {
 
     public abstract List<Game> getGameLibrary(Person person);
 
-    public abstract String getIdentifier();
+    public abstract String getIdentifier(Person person);
 
     public final String getPlatform()
     {
