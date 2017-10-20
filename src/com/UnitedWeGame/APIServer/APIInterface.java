@@ -14,17 +14,15 @@ import java.util.List;
 public abstract class APIInterface {
 
 
-    public static final String XBOX = "xbox";
-    public static final String PLAYSTATION = "psn";
-    public static final String STEAM = "steam";
+    public static final String XBOX = "XBOX";
+    public static final String PLAYSTATION = "PSN";
+    public static final String STEAM = "STEAM";
 
     protected String platform;
 
     protected String baseApiUrl;
 
     public abstract List<Friend> getFriendsStatus(Person person);
-
-    public abstract DynaBean additionalFriendInformation(String identifier) throws Exception;
 
     public abstract List<Game> getGameLibrary(Person person);
 

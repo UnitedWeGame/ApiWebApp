@@ -27,8 +27,8 @@ import java.util.List;
  */
 public class XboxAPIRequest extends APIInterface {
 
-    public static final String XBOX_ONE = "Xbox One";
-    public static final String XBOX_360 = "Xbox 360";
+    public static final String XBOX_ONE = "XboxOne";
+    public static final String XBOX_360 = "Xbox360";
 
 
     public XboxAPIRequest()
@@ -63,7 +63,6 @@ public class XboxAPIRequest extends APIInterface {
             List<DynaBean> dynaBeans = new JsonUtil().decodeJsonList(result.toString());
 
             List<Friend> friendsList = new ArrayList<>();
-
 
             List<Thread> threads = new ArrayList<>();
 
@@ -101,7 +100,7 @@ public class XboxAPIRequest extends APIInterface {
 
                                             DynaBean gameInfo = ((DynaBean) devicesList.get(devicesList.size() - 1));
                                             String type = gameInfo.get("type").toString();
-                                            String platform = (StringUtils.equals(type, "XboxOne") ? "Xbox One" : "Xbox 360");
+                                            String platform = (StringUtils.equals(type, XBOX_ONE) ? XBOX_ONE : XBOX_360);
 
 
                                             List<DynaBean> gameInfoTitles = (List<DynaBean>) gameInfo.get("titles");
@@ -180,11 +179,11 @@ public class XboxAPIRequest extends APIInterface {
                 thread.join();
             }
 
-            Connection c = dbcu.deleteOldOnlineFeed(person);
+            Connection c = dbcu.deleteOldOnlineFeed(person, XBOX);
 
             for(UserOnlineFeed feed : onlineFriends)
             {
-                dbcu.insertIntoOnlineFeed(feed.getUserId(), feed.getGamertag(), feed.getGameId(), c);
+                dbcu.insertIntoOnlineFeed(feed.getUserId(), feed.getGamertag(), feed.getGameId(), XBOX, c);
             }
 
 
@@ -192,6 +191,7 @@ public class XboxAPIRequest extends APIInterface {
                 c.commit();
                 c.setAutoCommit(true);
                 c.close();
+                DatabaseConnectionUtil.closedConnections++;
             }
             catch (Exception ex)
             {
@@ -210,8 +210,6 @@ public class XboxAPIRequest extends APIInterface {
     }
 
     public DynaBean additionalFriendInformation(String identifier) throws Exception {
-
-        //identifier = "2535414092388400";
 
         String url = getBaseApiUrl() + identifier + "/presence";
 
@@ -262,11 +260,8 @@ public class XboxAPIRequest extends APIInterface {
 
     public String getIdentifier(Person person)
     {
-        String identifier = "";
-
         try {
 
-            ;
 
             String url = getBaseApiUrl() + "xuid/" + URLEncoder.encode(person.getXboxGamertag().trim(), "UTF-8");
 
@@ -288,9 +283,6 @@ public class XboxAPIRequest extends APIInterface {
 
             return result.toString();
 
-
-
-
         }
         catch(Exception ex)
         {
@@ -305,6 +297,7 @@ public class XboxAPIRequest extends APIInterface {
     /**
      *
      *  Helper Methods
+     *  508F2C751A30B60F2CEE0FD67D8BB205 steam api key
      */
 
     private List<Game> getXboxOneGames(String identifier, long userId)

@@ -2,6 +2,11 @@ package com.UnitedWeGame.Utils;
 
 import com.UnitedWeGame.UserClasses.Person;
 
+import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +17,59 @@ import java.util.Properties;
  */
 public class DatabaseConnectionUtil {
 
+    public static int openConnections = 0;
+    public static int closedConnections = 0;
+
     // 1 hour time limit currently //TODO change back to 20 minutes for actual demo
-    public static final long TIME_LIMIT = 3600000;
+    public static final long TIME_LIMIT = 1200000;
     public static final long TIME_ZONE_DIFFERENCE = 14400000;
+
+    public static void seedDatabase()
+    {
+        Connection c = null;
+        try {
+            Properties props = new Properties();
+            props.setProperty("user", Property.DATABASE_USER);
+            props.setProperty("password", Property.DATABASE_PASSWORD);
+            props.setProperty("ssl", "true");
+
+            c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            List<String> sql = Files.readAllLines(Paths.get("/Users/cweeter/git/ApiWebApp/src/com/UnitedWeGame/resources/output.sql"));
+
+            for(String line : sql)
+            {
+                try{
+                    PreparedStatement statement = c.prepareStatement(line);
+                    statement.execute();
+                }
+                catch (Exception sqlstuff)
+                {
+                    sqlstuff.printStackTrace();
+                    System.err.println("***Problem with line: " + line + "****");
+
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        } finally {
+        try {
+            c.close();
+            closedConnections++;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    }
 
     public long getGameID(String name, String platform) {
         Connection c = null;
@@ -25,6 +80,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
@@ -56,7 +112,9 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
+                ex.printStackTrace();
 
             }
         }
@@ -75,6 +133,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -97,6 +156,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -115,6 +175,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,6 +197,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -154,6 +216,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -185,7 +248,7 @@ public class DatabaseConnectionUtil {
                     {
 
 
-                        gamertags.add(new Person(userId, gamerTag));
+                        gamertags.add(new Person(userId, gamerTag, ""));
                     }
                 }
             }
@@ -198,10 +261,73 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
 
+            }
+        }
+
+        return gamertags;
+    }
+
+    public List<Person> getSteamUsersToPoll() {
+        Connection c = null;
+        List<Person> gamertags = new ArrayList<>();
+        try {
+            Properties props = new Properties();
+            props.setProperty("user", Property.DATABASE_USER);
+            props.setProperty("password", Property.DATABASE_PASSWORD);
+            props.setProperty("ssl", "true");
+
+            c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+
+        try {
+
+            ResultSet rs = null;
+            PreparedStatement select = null;
+
+            select = c.prepareStatement("select * from users");
+
+            rs = select.executeQuery();
+
+            if(!rs.isBeforeFirst())
+                return new ArrayList<>();
+
+
+            while(rs.next())
+            {
+                Timestamp lastActiveTimestamp = rs.getTimestamp("last_activity");
+                if(System.currentTimeMillis() + TIME_ZONE_DIFFERENCE < lastActiveTimestamp.getTime() + TIME_LIMIT)
+                {
+                    long userId = rs.getLong("id");
+
+                    String gamerTag = getGamertag("Steam", userId);
+
+                    if(!gamerTag.isEmpty())
+                    {
+                        gamertags.add(new Person(userId, "", gamerTag));
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+
+            return gamertags;
+        } finally {
+            try {
+                c.close();
+                closedConnections++;
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
 
@@ -217,6 +343,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
             return "";
@@ -248,6 +375,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -259,27 +387,17 @@ public class DatabaseConnectionUtil {
     }
 
 
-    public void insertIntoOnlineFeed(long userId, String gamerTag, long gameId, Connection c) {
-
-//        try {
-//            Properties props = new Properties();
-//            props.setProperty("user", "");
-//            props.setProperty("password", "");
-//            props.setProperty("ssl", "true");
-//
-//            c = DriverManager.getConnection("", props);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+    public void insertIntoOnlineFeed(long userId, String gamerTag, long gameId, String platform, Connection c) {
 
         try {
             ResultSet rs = null;
             PreparedStatement insert = null;
 
-            insert = c.prepareStatement("INSERT INTO online_feed(gamer_tag, last_activity, game_id, user_id) VALUES(?, NOW(),?,?)");
+            insert = c.prepareStatement("INSERT INTO online_feed(gamer_tag, last_activity, game_id, user_id, platform) VALUES(?, NOW(),?,?,?)");
             insert.setString(1, gamerTag);
             insert.setLong(2, gameId);
             insert.setLong(3, userId);
+            insert.setString(4, platform);
 
             insert.executeUpdate();
 
@@ -291,6 +409,7 @@ public class DatabaseConnectionUtil {
                 c.rollback();
                 c.setAutoCommit(true);
                 c.close();
+                closedConnections++;
             }
             catch (Exception e)
             {
@@ -300,7 +419,7 @@ public class DatabaseConnectionUtil {
     }
 
 
-    public Connection deleteOldOnlineFeed(Person person) {
+    public Connection deleteOldOnlineFeed(Person person, String platform) {
         Connection c = null;
         try {
             Properties props = new Properties();
@@ -309,6 +428,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
 
             c.setAutoCommit(false);
         } catch (Exception e) {
@@ -318,9 +438,10 @@ public class DatabaseConnectionUtil {
         try {
             PreparedStatement delete = null;
 
-            delete = c.prepareStatement("DELETE FROM online_feed where user_id = ?");
+            delete = c.prepareStatement("DELETE FROM online_feed where user_id = ? AND platform = ?");
 
             delete.setLong(1, person.getUserId());
+            delete.setString(2, platform);
 
             delete.executeUpdate();
 
@@ -333,6 +454,7 @@ public class DatabaseConnectionUtil {
                 c.rollback();
                 c.setAutoCommit(true);
                 c.close();
+                closedConnections++;
             }
             catch(Exception e)
             {
@@ -355,6 +477,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -376,6 +499,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -393,6 +517,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -420,6 +545,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -441,6 +567,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -465,9 +592,11 @@ public class DatabaseConnectionUtil {
 
                     String gamerTag = getGamertag("Xbox Live", userId);
 
-                    if(!gamerTag.isEmpty())
+                    String steamId = getGamertag("Steam", userId);
+
+                    if(!gamerTag.isEmpty() || !steamId.isEmpty())
                     {
-                        gamertags.add(new Person(userId, gamerTag));
+                        gamertags.add(new Person(userId, gamerTag, steamId));
                     }
             }
 
@@ -479,6 +608,7 @@ public class DatabaseConnectionUtil {
         } finally {
             try {
                 c.close();
+                closedConnections++;
             } catch (Exception ex) {
                 ex.printStackTrace();
 
@@ -499,6 +629,7 @@ public class DatabaseConnectionUtil {
             props.setProperty("ssl", "true");
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -520,6 +651,7 @@ public class DatabaseConnectionUtil {
 
             try {
                 c.close();
+                closedConnections++;
             }
             catch(Exception e)
             {

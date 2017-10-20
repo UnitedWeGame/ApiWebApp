@@ -34,6 +34,8 @@ public class JsonUtil {
         {
             System.err.println(e.getMessage());
             System.err.println(e.getCause().getMessage());
+
+            e.printStackTrace();
         }
         return new ArrayList<DynaBean>();
     }

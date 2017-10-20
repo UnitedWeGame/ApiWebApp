@@ -2,6 +2,7 @@ package com.UnitedWeGame;
 
 import com.UnitedWeGame.APIServer.APIInterface;
 import com.UnitedWeGame.APIServer.IgdbAPIService;
+import com.UnitedWeGame.APIServer.SteamAPIRequest;
 import com.UnitedWeGame.APIServer.XboxAPIRequest;
 import com.UnitedWeGame.InformationObjects.Game;
 import com.UnitedWeGame.UserClasses.Friend;
@@ -10,7 +11,7 @@ import com.UnitedWeGame.UserClasses.Person;
 import java.sql.*;
 
 import com.UnitedWeGame.Utils.DatabaseConnectionUtil;
-import org.postgresql.Driver;
+import com.UnitedWeGame.Utils.ServerUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,127 +22,69 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args){
-
-        APIInterface xboxInterface = new XboxAPIRequest();
-
+        
         Person person = new Person();
         person.setXboxIdentifier("2533274792755153");
         person.setUserId(6666);
+        person.setSteamIdentifier("76561198015600919");
 
-        int count = 0;
+        //XboxAPIRequest xboxAPIRequest = new XboxAPIRequest();
+
+        //xboxAPIRequest.getGameLibrary(person);
+
+//        SteamAPIRequest steamAPIRequest = new SteamAPIRequest();
+//        steamAPIRequest.getGameLibrary(person);
+//        steamAPIRequest.getFriendsStatus(person);
 
 
-        while(true) {
+        Thread xboxThread = new Thread(new Runnable() {
 
-            try {
+            @Override
+            public void run() {
 
-                List<Person> xboxUsersToPoll = new DatabaseConnectionUtil().getXboxGamertagsToPoll();
+                while(true) {
 
-                for (Person xboxUser : xboxUsersToPoll) {
-                    xboxUser.setXboxIdentifier(xboxInterface.getIdentifier(xboxUser));
+                    ServerUtil.runXboxServer();
+                    ServerUtil.incrementXboxCount();
 
                 }
 
+            }
+        });
 
-                List<Thread> threads = new ArrayList<>();
+        Thread steamThread = new Thread(new Runnable() {
 
-                if (count % 1000 == 0) {
-                    Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
 
-                        @Override
-                        public void run() {
+                while(true) {
 
-                            for (Person xboxUser : xboxUsersToPoll) {
+                    ServerUtil.runSteamServer();
+                    ServerUtil.incrementSteamCount();
 
-                                xboxInterface.getGameLibrary(xboxUser);
-                            }
-
-                        }
-                    });
-                    threads.add(thread);
-                    thread.start();
                 }
 
-
-                Thread thread = new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        for (Person xboxUser : xboxUsersToPoll) {
-
-                            List<Person> newUsers = new DatabaseConnectionUtil().returnNewUsers();
-
-
-                            if(newUsers.size() != 0) {
-
-                                Thread thread = new Thread(new Runnable() {
-
-                                    @Override
-                                    public void run() {
-
-                                        for (Person newUser : newUsers) {
-
-                                            newUser.setXboxIdentifier(xboxInterface.getIdentifier(newUser));
-
-                                            xboxInterface.getGameLibrary(newUser);
-                                            new DatabaseConnectionUtil().deleteNewUser(newUser);
-                                        }
-
-                                    }
-                                });
-
-                                thread.start();
-
-
-                                Thread userThread = new Thread(new Runnable() {
-
-                                    @Override
-                                    public void run() {
-
-                                        for (Person newXboxUser : newUsers) {
-
-
-                                            newXboxUser.setXboxIdentifier(xboxInterface.getIdentifier(newXboxUser));
-
-                                            xboxInterface.getFriendsStatus(newXboxUser);
-
-                                            new DatabaseConnectionUtil().deleteNewUser(newXboxUser);
-
-
-                                        }
-                                    }
-                                });
-
-                                userThread.start();
-
-
-                            }
-                                xboxInterface.getFriendsStatus(xboxUser);
-
-                                }
-
-                            }
-                    });
-
-                threads.add(thread);
-
-                thread.start();
-
-                thread.join();
-
             }
-            catch (Exception ex)
-            {
-                System.err.println("Err: " + ex.getMessage());
-                ex.printStackTrace();
+        });
+
+        Thread newUsers = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ServerUtil.runNewUsersServer();
             }
+        });
 
-            count++;
-        }
+        newUsers.start();
+        xboxThread.start();
+        steamThread.start();
+//        SteamAPIRequest steamAPIRequest = new SteamAPIRequest();
 
 
-
+//        while(true)
+//        {
+//            steamAPIRequest.getGameLibrary(person);
+//            steamAPIRequest.getFriendsStatus(person);
+//        }
 
     }
 }

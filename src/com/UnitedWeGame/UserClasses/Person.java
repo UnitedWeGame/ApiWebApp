@@ -8,6 +8,7 @@ public class Person {
     private String xboxGamertag;
     private String xboxIdentifier;
     private long userId;
+    private String steamIdentifier;
 
 
     public Person()
@@ -15,10 +16,11 @@ public class Person {
 
     }
 
-    public Person(long userId, String gamerTag)
+    public Person(long userId, String gamerTag, String steamIdentifier)
     {
         setUserId(userId);
         setXboxGamertag(gamerTag);
+        setSteamIdentifier(steamIdentifier);
     }
 
     public String getXboxIdentifier() {
@@ -40,4 +42,12 @@ public class Person {
     public long getUserId() { return userId; }
     public void setUserId(long userId) { this.userId = userId;}
 
+
+    public String getSteamIdentifier() {
+        return steamIdentifier;
+    }
+
+    public void setSteamIdentifier(String steamIdentifier) {
+        this.steamIdentifier = steamIdentifier;
+    }
 }

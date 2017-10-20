@@ -21,7 +21,7 @@ import uk.ac.shef.wit.simmetrics.similaritymetrics.*;
  */
 public class IgdbAPIService {
 
-    public final String BASE_URL = "https://igdbcom-internet-game-database-v1.p.mashape.com/";
+    public final String BASE_URL = "https://api-2445582011268.apicast.io/";
 
     public String getGameImage(String gameTitle)
     {
@@ -59,7 +59,7 @@ public class IgdbAPIService {
             HttpGet request = new HttpGet(url);
 
             // add request header
-            request.addHeader("X-Mashape-Key", Property.IGDB_API_TOKEN);
+            request.addHeader("user-key", Property.IGDB_API_TOKEN);
             request.addHeader("Accept", "application/json");
             HttpResponse response = client.execute(request);
 
