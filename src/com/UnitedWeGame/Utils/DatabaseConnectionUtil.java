@@ -1,5 +1,6 @@
 package com.UnitedWeGame.Utils;
 
+import com.UnitedWeGame.APIServer.IgdbAPIService;
 import com.UnitedWeGame.UserClasses.Person;
 
 import java.io.File;
@@ -31,7 +32,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -77,7 +78,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -130,7 +131,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -165,6 +166,51 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    public void insertScreenshotsIntoDB(Long game_id, List<String> image_urls) {
+
+        for(String image_url : image_urls) {
+
+            Connection c = null;
+            try {
+                Properties props = new Properties();
+                props.setProperty("user", Property.DATABASE_USER);
+                props.setProperty("password", Property.DATABASE_PASSWORD);
+                props.setProperty("ssl", Property.USE_SSL);
+
+                c = DriverManager.getConnection(Property.DATABASE_URL, props);
+                openConnections++;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+
+                ResultSet rs = null;
+                PreparedStatement insert = null;
+
+
+                insert = c.prepareStatement("INSERT INTO screenshot (url, game_id) VALUES(?,?)");
+                insert.setString(1, image_url);
+                insert.setLong(2, game_id);
+
+                insert.executeUpdate();
+
+            } catch (Exception ex) {
+                System.err.println(ex.getMessage());
+                ex.printStackTrace();
+
+            } finally {
+                try {
+                    c.close();
+                    closedConnections++;
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+
+                }
+            }
+        }
+    }
+
 
     public void addGameToUserLibrary(long userId, long gameId) {
         Connection c = null;
@@ -172,7 +218,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -213,7 +259,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -279,7 +325,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -340,7 +386,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -387,6 +433,55 @@ public class DatabaseConnectionUtil {
     }
 
 
+    public void getScreenshotsForExistingGames() {
+        Connection c = null;
+        try {
+            Properties props = new Properties();
+            props.setProperty("user", Property.DATABASE_USER);
+            props.setProperty("password", Property.DATABASE_PASSWORD);
+            props.setProperty("ssl", Property.USE_SSL);
+
+            c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ResultSet rs = null;
+            PreparedStatement select = null;
+
+            select = c.prepareStatement("select id, title from game");
+
+            rs = select.executeQuery();
+
+
+            while(rs.next()) {
+
+                long id = rs.getLong("id");
+                String title = rs.getString("title");
+
+                new DatabaseConnectionUtil().insertScreenshotsIntoDB(id, new IgdbAPIService().getScreenshots(title));
+
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+
+        } finally {
+            try {
+                c.close();
+                closedConnections++;
+            } catch (Exception ex) {
+                ex.printStackTrace();
+
+
+            }
+        }
+    }
+
+
     public void insertIntoOnlineFeed(long userId, String gamerTag, long gameId, String platform, Connection c) {
 
         try {
@@ -419,13 +514,75 @@ public class DatabaseConnectionUtil {
     }
 
 
+
+    public void updateScreenshotURLs() {
+        Connection c = null;
+        try {
+            Properties props = new Properties();
+            props.setProperty("user", Property.DATABASE_USER);
+            props.setProperty("password", Property.DATABASE_PASSWORD);
+            props.setProperty("ssl", Property.USE_SSL);
+
+            c = DriverManager.getConnection(Property.DATABASE_URL, props);
+            openConnections++;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ResultSet rs = null;
+            PreparedStatement select = null;
+
+            select = c.prepareStatement("select id, url from screenshot");
+
+            rs = select.executeQuery();
+
+
+            while(rs.next()) {
+
+                long id = rs.getLong("id");
+                String url = rs.getString("url");
+
+                if(url.contains("t_cover_big"))
+                {
+                    url = url.replace("t_cover_big", "t_screenshot_huge");
+                    c.prepareStatement("update screenshot set url = '" + url + "' where id = " + id).executeUpdate();
+
+                }
+                else if(url.contains("t_screenshot_big"))
+                {
+                    url = url.replace("t_screenshot_big", "t_screenshot_huge");
+                    c.prepareStatement("update screenshot set url = '" + url + "' where id = " + id).executeUpdate();
+
+                }
+
+
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+
+        } finally {
+            try {
+                c.close();
+                closedConnections++;
+            } catch (Exception ex) {
+                ex.printStackTrace();
+
+
+            }
+        }
+    }
+
+
     public Connection deleteOldOnlineFeed(Person person, String platform) {
         Connection c = null;
         try {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -474,7 +631,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -514,7 +671,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -564,7 +721,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;
@@ -626,7 +783,7 @@ public class DatabaseConnectionUtil {
             Properties props = new Properties();
             props.setProperty("user", Property.DATABASE_USER);
             props.setProperty("password", Property.DATABASE_PASSWORD);
-            props.setProperty("ssl", "true");
+            props.setProperty("ssl", Property.USE_SSL);
 
             c = DriverManager.getConnection(Property.DATABASE_URL, props);
             openConnections++;

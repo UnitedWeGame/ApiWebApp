@@ -121,9 +121,13 @@ public class XboxAPIRequest extends APIInterface {
 
                                                     String imageUrl = new IgdbAPIService().getGameImage(gameTitle);
 
+                                                    List<String> screenshots = new IgdbAPIService().getScreenshots(gameTitle);
+
                                                     dbcu.insertGameIntoDb(gameTitle, platform, imageUrl);
 
                                                     gameID = dbcu.getGameID(gameTitle, platform);
+
+                                                    dbcu.insertScreenshotsIntoDB(gameID, new IgdbAPIService().getScreenshots(gameTitle));
                                                 }
 
                                                 onlineFriends.add(new UserOnlineFeed(person.getUserId(), gameID, friendObj.getGamertag()));
@@ -250,6 +254,8 @@ public class XboxAPIRequest extends APIInterface {
 
     public List<Game> getGameLibrary(Person person) {
 
+        System.out.println(person.getXboxGamertag());
+
         List<Game> games = getXboxOneGames(person.getXboxIdentifier(), person.getUserId());
 
         games.addAll(getXbox360Games(person.getXboxIdentifier(), person.getUserId()));
@@ -337,11 +343,17 @@ public class XboxAPIRequest extends APIInterface {
                 currentGame.setIsOwned(true);
                 currentGame.setTitle(game.get("name").toString());
 
+
                 if(dbcu.getGameID(currentGame.getTitle(), XBOX_ONE) == -1)
                 {
                     String imageUrl = igdb.getGameImage(currentGame.getTitle());
 
+                    List<String> screenshots = igdb.getScreenshots(currentGame.getTitle());
+
                     dbcu.insertGameIntoDb(currentGame.getTitle(), XBOX_ONE, imageUrl);
+
+                    long gameID = dbcu.getGameID(currentGame.getTitle(), XBOX_ONE);
+                    dbcu.insertScreenshotsIntoDB(gameID, screenshots);
 
                 }
 
@@ -408,6 +420,11 @@ public class XboxAPIRequest extends APIInterface {
                     String imageUrl = igdb.getGameImage(currentGame.getTitle());
 
                     dbcu.insertGameIntoDb(currentGame.getTitle(), XBOX_360, imageUrl);
+
+                    long gameID = dbcu.getGameID(currentGame.getTitle(), XBOX_360);
+
+                    dbcu.insertScreenshotsIntoDB(gameID, igdb.getScreenshots(currentGame.getTitle()));
+
 
                 }
 

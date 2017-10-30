@@ -180,14 +180,20 @@ public class SteamAPIRequest extends APIInterface {
                                                         gameID = dbcu.getGameID(appName, STEAM);
 
 
+                                                        List<String> screenshots = new ArrayList<>();
+
                                                         if (gameID == -1) {
 
                                                             String imageUrl = dataBean.get("header_image").toString();
                                                             imageUrl = imageUrl.replace("\\", "");
 
+                                                            screenshots = new IgdbAPIService().getScreenshots(appName);
+
                                                             dbcu.insertGameIntoDb(appName, STEAM, imageUrl);
 
                                                             gameID = dbcu.getGameID(appName, STEAM);
+
+                                                            dbcu.insertScreenshotsIntoDB(gameID, screenshots);
 
                                                             gameList.put(appId, appName);
 
@@ -234,6 +240,8 @@ public class SteamAPIRequest extends APIInterface {
                                                                 dbcu.insertGameIntoDb(appName, STEAM, imageUrl);
 
                                                                 gameID = dbcu.getGameID(appName, STEAM);
+
+                                                                dbcu.insertScreenshotsIntoDB(gameID, new IgdbAPIService().getScreenshots(appName));
 
                                                                 gameList.put(appId, appName);
 
@@ -475,6 +483,7 @@ public class SteamAPIRequest extends APIInterface {
 
             for (DynaBean game : (List<DynaBean>) ((DynaBean) dynaBeans.get(0).get("response")).get("games")) {
                 try {
+                    System.out.println(person.getSteamIdentifier());
                     String baseImageURL = "http://media.steampowered.com/steamcommunity/public/images/apps/{appid}/{hash}.jpg";
                     Game currentGame = new Game();
 
@@ -496,7 +505,13 @@ public class SteamAPIRequest extends APIInterface {
                                 baseImageURL = baseImageURL.replace("{appid}", game.get("appid").toString());
                                 baseImageURL = baseImageURL.replace("{hash}", game.get("img_logo_url").toString());
                             }
+
                             dbcu.insertGameIntoDb(currentGame.getTitle(), STEAM, baseImageURL);
+
+                            long gameID = dbcu.getGameID(currentGame.getTitle(), STEAM);
+
+                            dbcu.insertScreenshotsIntoDB(gameID, new IgdbAPIService().getScreenshots(currentGame.getTitle()));
+
 
                             gameList.put(game.get("appid").toString(), currentGame.getTitle());
                         } catch (Exception ex) {
@@ -505,6 +520,10 @@ public class SteamAPIRequest extends APIInterface {
                             String imageURL = "http://unitedwegame.herokuapp.com/No_Image_Found_Steam.png";
 
                             dbcu.insertGameIntoDb(currentGame.getTitle(), STEAM, imageURL);
+
+                            long gameID = dbcu.getGameID(currentGame.getTitle(), STEAM);
+
+                            dbcu.insertScreenshotsIntoDB(gameID, new IgdbAPIService().getScreenshots(currentGame.getTitle()));
 
                             gameList.put(game.get("appid").toString(), currentGame.getTitle());
 
