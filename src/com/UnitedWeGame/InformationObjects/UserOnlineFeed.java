@@ -4,14 +4,11 @@ package com.UnitedWeGame.InformationObjects;
  * Created by cweeter on 4/24/17.
  */
 public class UserOnlineFeed {
-
     private long userId;
     private String gamertag;
     private long gameId;
 
-
-    public UserOnlineFeed(long userId, long gameId, String gamertag)
-    {
+    public UserOnlineFeed(long userId, long gameId, String gamertag) {
         setUserId(userId);
         setGameId(gameId);
         setGamertag(gamertag);

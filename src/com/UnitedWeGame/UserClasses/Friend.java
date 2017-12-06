@@ -4,7 +4,6 @@ package com.UnitedWeGame.UserClasses;
  * Created by cweeter on 3/10/17.
  */
 public class Friend {
-
     private String realName;
     private String gamertag;
     private String gamerId;

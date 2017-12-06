@@ -4,12 +4,10 @@ package com.UnitedWeGame.InformationObjects;
  * Created by cweeter on 3/10/17.
  */
 public class Game {
-
     public final static String XBOX_ONE = "Xbox One";
     public final static String PLAYSTATION = "Playstation";
     public final static String STEAM = "Steam";
     public final static String XBOX_360 = "Xbox 360";
-
     private String title;
     private String platform;
     private boolean isOwned;

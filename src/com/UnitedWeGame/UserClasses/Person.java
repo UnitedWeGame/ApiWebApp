@@ -4,20 +4,16 @@ package com.UnitedWeGame.UserClasses;
  * Created by cweeter on 3/11/17.
  */
 public class Person {
-
     private String xboxGamertag;
     private String xboxIdentifier;
     private long userId;
     private String steamIdentifier;
+    private String psnIdentifier;
 
-
-    public Person()
-    {
-
+    public Person() {
     }
 
-    public Person(long userId, String gamerTag, String steamIdentifier)
-    {
+    public Person(long userId, String gamerTag, String steamIdentifier) {
         setUserId(userId);
         setXboxGamertag(gamerTag);
         setSteamIdentifier(steamIdentifier);
@@ -39,9 +35,13 @@ public class Person {
         this.xboxGamertag = xboxGamertag;
     }
 
-    public long getUserId() { return userId; }
-    public void setUserId(long userId) { this.userId = userId;}
+    public long getUserId() {
+        return userId;
+    }
 
+    public void setUserId(long userId) {
+        this.userId = userId;
+    }
 
     public String getSteamIdentifier() {
         return steamIdentifier;
@@ -49,5 +49,14 @@ public class Person {
 
     public void setSteamIdentifier(String steamIdentifier) {
         this.steamIdentifier = steamIdentifier;
+    }
+
+    public String getPSNIdentifier() {
+        return psnIdentifier;
+    }
+
+    public Person setPSNIdentifier(String psnIdentifier) {
+        this.psnIdentifier = psnIdentifier;
+        return this;
     }
 }
