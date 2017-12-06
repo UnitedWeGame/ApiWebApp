@@ -23,11 +23,6 @@ import java.util.Properties;
 public class Main {
     public static void main(String[] args) {
 
-        Person person = new Person();
-        person.setXboxIdentifier("2533274792755153");
-        person.setUserId(6666);
-        person.setSteamIdentifier("76561198015600919");
-
         Thread xboxThread = new Thread(new Runnable() {
             @Override
             public void run() {
