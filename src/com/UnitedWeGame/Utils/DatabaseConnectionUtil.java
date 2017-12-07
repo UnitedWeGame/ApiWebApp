@@ -22,6 +22,7 @@ public class DatabaseConnectionUtil {
     public static final long TIME_LIMIT = 1200000;
     public static final long TIME_ZONE_DIFFERENCE = 14400000;
 
+    // Function to seed the Database when in a weird state
     public static void seedDatabase() {
         Connection c = null;
         try {
@@ -57,6 +58,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Gets the game ID if in the DB, else returns -1
     public long getGameID(String name, String platform) {
         Connection c = null;
         try {
@@ -96,6 +98,7 @@ public class DatabaseConnectionUtil {
         return -1;
     }
 
+    // Inserts the game into the DB
     public void insertGameIntoDb(String title, String platform_name, String image_url, Map<String, Object> gameData) {
         Connection c = null;
 
@@ -141,6 +144,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Inserts screenshots into DB
     public void insertScreenshotsIntoDB(Long game_id, List<String> image_urls) {
         for (String image_url : image_urls) {
             Connection c = null;
@@ -176,6 +180,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Adds game to user's library
     public void addGameToUserLibrary(long userId, long gameId) {
         Connection c = null;
         try {
@@ -208,6 +213,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Gets list of Xbox Gamertags to poll
     public List<Person> getXboxGamertagsToPoll() {
         Connection c = null;
         List<Person> gamertags = new ArrayList<>();
@@ -254,6 +260,7 @@ public class DatabaseConnectionUtil {
         return gamertags;
     }
 
+    // Gets list of steam users to poll
     public List<Person> getSteamUsersToPoll() {
         Connection c = null;
         List<Person> gamertags = new ArrayList<>();
@@ -300,6 +307,7 @@ public class DatabaseConnectionUtil {
         return gamertags;
     }
 
+    // Get gamertag for given platform
     public String getGamertag(String platform, long userId) {
         Connection c = null;
         try {
@@ -339,6 +347,7 @@ public class DatabaseConnectionUtil {
         return "";
     }
 
+    // Puts screenshots for existing games into DB
     public static void getScreenshotsForExistingGames() {
         Connection c = null;
         try {
@@ -374,6 +383,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // delete's users old online feed, and enters in current online feed
     public void insertIntoOnlineFeed(long userId, String gamerTag, long gameId, String platform, Connection c) {
         try {
             ResultSet rs = null;
@@ -398,6 +408,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Updates screenshot urls in case of changes
     public void updateScreenshotURLs() {
         Connection c = null;
         try {
@@ -439,6 +450,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // deletes the old online feed, and returns the connection so you can do it in 1 DB Transaction
     public Connection deleteOldOnlineFeed(Person person, String platform) {
         Connection c = null;
         try {
@@ -473,6 +485,7 @@ public class DatabaseConnectionUtil {
         return c;
     }
 
+    // Deletes games from DB
     public void deleteGamesFromDb() {
         Connection c = null;
         try {
@@ -503,6 +516,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Checks to see if user owns given game
     public boolean userOwnsGame(long userId, long gameId) {
         Connection c = null;
         try {
@@ -541,6 +555,7 @@ public class DatabaseConnectionUtil {
         return false;
     }
 
+    // Returns users who have recently signed in
     public List<Person> returnNewUsers() {
         Connection c = null;
         List<Person> gamertags = new ArrayList<>();
@@ -585,6 +600,7 @@ public class DatabaseConnectionUtil {
         return gamertags;
     }
 
+    // Deletes new user after they have been processed
     public void deleteNewUser(Person person) {
         Connection c = null;
         try {
@@ -615,6 +631,7 @@ public class DatabaseConnectionUtil {
         }
     }
 
+    // Adds PS games to our DB
     public void addPSGamesToDB() {
         List<String> gameTitlesPS4 = new ArrayList<>();
         List<String> gameTitlesPS3 = new ArrayList<>();

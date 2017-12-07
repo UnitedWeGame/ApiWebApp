@@ -31,6 +31,7 @@ public class PSNAPIRequest extends APIInterface {
         setBaseApiUrl("http://api.gumerAPI.com/");
     }
 
+    // Get Friend Status
     @Override
     public List<Friend> getFriendsStatus(Person person) {
         String url = getBaseApiUrl() + "IPSNUser/GetFriendList/v0001/?key=" + Property.PSN_API_TOKEN + "&PSNid=" + person.getPSNIdentifier() + "&relationship=friend";
@@ -242,6 +243,7 @@ public class PSNAPIRequest extends APIInterface {
         }
     }
 
+    // Get Additional Friend info
     public List<DynaBean> additionalFriendInformation(String identifiers) {
         String url = getBaseApiUrl() + "IPSNUser/GetPlayerSummaries/v0002/?key=" + Property.PSN_API_TOKEN + "&PSNids=" + identifiers;
         try {
@@ -253,9 +255,7 @@ public class PSNAPIRequest extends APIInterface {
                     new InputStreamReader(response.getEntity().getContent()));
             StringBuffer result = new StringBuffer();
             String line = "";
-            while ((line = rd.readLine()) != null) {
-                result.append(line);
-            }
+
             List<DynaBean> dynaBeans = new JsonUtil().decodeJsonList(result.toString());
             return (List<DynaBean>) ((DynaBean) dynaBeans.get(0).get("response")).get("players");
         } catch (Exception ex) {
@@ -264,6 +264,7 @@ public class PSNAPIRequest extends APIInterface {
         return new ArrayList<>();
     }
 
+    // Get Game Library
     @Override
     public List<Game> getGameLibrary(Person person) {
         long startTime = System.currentTimeMillis();
@@ -334,6 +335,7 @@ public class PSNAPIRequest extends APIInterface {
         }
     }
 
+    // Get Identifier
     @Override
     public String getIdentifier(Person person) {
         return person.getPSNIdentifier();

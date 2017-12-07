@@ -24,6 +24,7 @@ import uk.ac.shef.wit.simmetrics.similaritymetrics.*;
 public class IgdbAPIService {
     public final String BASE_URL = "https://api-2445582011268.apicast.io/";
 
+    // Get cover image
     public String getGameImage(String gameTitle) {
         if (gameTitle.equalsIgnoreCase("Netflix")) {
             return "http://film.medialt.no/wp-content/uploads/2015/04/netflix_logo.jpg";
@@ -108,6 +109,7 @@ public class IgdbAPIService {
         return imageURL;
     }
 
+    // Get Screenshots
     public List<String> getScreenshots(String gameTitle) {
         List<String> images = new ArrayList<>();
         if (gameTitle.equalsIgnoreCase("Netflix")) {
@@ -203,6 +205,7 @@ public class IgdbAPIService {
         return images;
     }
 
+    // Get additional game data
     public Map<String, Object> getGameData(String gameTitle) {
         Map<String, Object> gameData = new HashMap<>();
 

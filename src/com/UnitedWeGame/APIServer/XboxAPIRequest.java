@@ -33,6 +33,7 @@ public class XboxAPIRequest extends APIInterface {
         setBaseApiUrl("https://xboxapi.com/v2/");
     }
 
+    // Get Online Friends
     public List<Friend> getFriendsStatus(Person person) {
         String url = getBaseApiUrl() + person.getXboxIdentifier() + "/friends";
         try {
@@ -150,6 +151,7 @@ public class XboxAPIRequest extends APIInterface {
         }
     }
 
+    // Get additional friend info
     public DynaBean additionalFriendInformation(String identifier) throws Exception {
         String url = getBaseApiUrl() + identifier + "/presence";
         try {
@@ -174,6 +176,7 @@ public class XboxAPIRequest extends APIInterface {
         }
     }
 
+    // get game library
     public List<Game> getGameLibrary(Person person) {
         System.out.println(person.getXboxGamertag());
         List<Game> games = getXboxOneGames(person.getXboxIdentifier(), person.getUserId());
@@ -181,6 +184,7 @@ public class XboxAPIRequest extends APIInterface {
         return games;
     }
 
+    // get identifier from gamertag
     public String getIdentifier(Person person) {
         try {
             String url = getBaseApiUrl() + "xuid/" + URLEncoder.encode(person.getXboxGamertag().trim(), "UTF-8");
@@ -206,8 +210,9 @@ public class XboxAPIRequest extends APIInterface {
 
     /**
      * Helper Methods
-     * 508F2C751A30B60F2CEE0FD67D8BB205 steam api key
+     *
      */
+    // Get Xbox One games
     private List<Game> getXboxOneGames(String identifier, long userId) {
         List<Game> games = new ArrayList<>();
         try {
@@ -251,6 +256,7 @@ public class XboxAPIRequest extends APIInterface {
         }
     }
 
+    // Get xbox 360 games
     private List<Game> getXbox360Games(String identifier, long userId) {
         List<Game> games = new ArrayList<>();
         try {

@@ -35,6 +35,7 @@ public class SteamAPIRequest extends APIInterface {
         setBaseApiUrl("http://api.steampowered.com/");
     }
 
+    // Get status of steam friends
     @Override
     public List<Friend> getFriendsStatus(Person person) {
         String url = getBaseApiUrl() + "ISteamUser/GetFriendList/v0001/?key=" + Property.STEAM_API_TOKEN + "&steamid=" + person.getSteamIdentifier() + "&relationship=friend";
@@ -295,6 +296,7 @@ public class SteamAPIRequest extends APIInterface {
         }
     }
 
+    // Get additional friend info
     public List<DynaBean> additionalFriendInformation(String identifiers) {
         String url = getBaseApiUrl() + "ISteamUser/GetPlayerSummaries/v0002/?key=" + Property.STEAM_API_TOKEN + "&steamids=" + identifiers;
         try {
@@ -316,7 +318,7 @@ public class SteamAPIRequest extends APIInterface {
         }
         return new ArrayList<>();
     }
-
+    // Get game library for Steam
     @Override
     public List<Game> getGameLibrary(Person person) {
         long startTime = System.currentTimeMillis();
@@ -387,6 +389,7 @@ public class SteamAPIRequest extends APIInterface {
         }
     }
 
+    // Get steam identifier
     @Override
     public String getIdentifier(Person person) {
         return person.getSteamIdentifier();

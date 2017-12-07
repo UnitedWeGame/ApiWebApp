@@ -28,6 +28,7 @@ public class ServerUtil {
     public static List<String> currentLibraryThreads = new ArrayList<>();
     public static List<String> currentOnlineUserThreads = new ArrayList<>();
 
+    // Xbox server thread code
     public static void runXboxServer() {
         try {
             APIInterface xboxInterface = new XboxAPIRequest();
@@ -56,6 +57,7 @@ public class ServerUtil {
                 @Override
                 public void run() {
                     for (Person xboxUser : xboxUsersToPoll) {
+                        // Old server code, keep in case of issues
 //                        List<Person> newUsers = new DatabaseConnectionUtil().returnNewUsers();
 //
 //
@@ -120,6 +122,7 @@ public class ServerUtil {
         }
     }
 
+    // Steam server code
     public static void runSteamServer() {
         try {
             APIInterface steamInterface = new SteamAPIRequest();
@@ -145,6 +148,7 @@ public class ServerUtil {
                 @Override
                 public void run() {
                     for (Person steamUser : steamUsersToPoll) {
+                        // Old server code, keep in case something goes wrong
 //                        List<Person> newUsers = new DatabaseConnectionUtil().returnNewUsers();
 //
 //
@@ -209,6 +213,7 @@ public class ServerUtil {
         }
     }
 
+    // Code for NewUsers server
     public static void runNewUsersServer() {
         Thread serverThread = new Thread(new Runnable() {
             @Override
