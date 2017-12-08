@@ -38,7 +38,7 @@ public class SteamAPIRequest extends APIInterface {
     // Get status of steam friends
     @Override
     public List<Friend> getFriendsStatus(Person person) {
-        String url = getBaseApiUrl() + "ISteamUser/GetFriendList/v0001/?key=" + Property.STEAM_API_TOKEN + "&steamid=" + person.getSteamIdentifier() + "&relationship=friend";
+        String url = getBaseApiUrl() + "ISteamUser/GetFriendList/v0001/?key=" + Property.STEAM_API_TOKEN + "&steamid=" + person.getSteamIdentifier().trim() + "&relationship=friend";
         try {
             HttpClient client = HttpClientBuilder.create().build();
             HttpGet request = new HttpGet(url);
@@ -322,7 +322,7 @@ public class SteamAPIRequest extends APIInterface {
     @Override
     public List<Game> getGameLibrary(Person person) {
         long startTime = System.currentTimeMillis();
-        String url = getBaseApiUrl() + "IPlayerService/GetOwnedGames/v0001/?key=" + Property.STEAM_API_TOKEN + "&steamid=" + person.getSteamIdentifier() + "&include_played_free_games=1&include_appinfo=1";
+        String url = getBaseApiUrl() + "IPlayerService/GetOwnedGames/v0001/?key=" + Property.STEAM_API_TOKEN + "&steamid=" + person.getSteamIdentifier().trim() + "&include_played_free_games=1&include_appinfo=1";
         List<Game> games = new ArrayList<>();
         try {
             HttpClient client = HttpClientBuilder.create().build();
@@ -392,6 +392,6 @@ public class SteamAPIRequest extends APIInterface {
     // Get steam identifier
     @Override
     public String getIdentifier(Person person) {
-        return person.getSteamIdentifier();
+        return person.getSteamIdentifier().trim();
     }
 }

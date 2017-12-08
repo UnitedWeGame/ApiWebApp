@@ -42,10 +42,10 @@ public class ServerUtil {
                     @Override
                     public void run() {
                         for (Person xboxUser : xboxUsersToPoll) {
-                            if (!currentLibraryThreads.contains(xboxUser.getXboxGamertag())) {
-                                currentLibraryThreads.add(xboxUser.getXboxGamertag());
+                            if (!currentLibraryThreads.contains(xboxUser.getUserId()+xboxUser.getXboxGamertag())) {
+                                currentLibraryThreads.add(xboxUser.getUserId()+xboxUser.getXboxGamertag());
                                 xboxInterface.getGameLibrary(xboxUser);
-                                currentLibraryThreads.remove(xboxUser.getXboxGamertag());
+                                currentLibraryThreads.remove(xboxUser.getUserId()+xboxUser.getXboxGamertag());
                             }
                         }
                     }
@@ -105,10 +105,10 @@ public class ServerUtil {
 //
 //
 //                        }
-                        if (!currentOnlineUserThreads.contains(xboxUser.getXboxGamertag())) {
-                            currentOnlineUserThreads.add(xboxUser.getXboxGamertag());
+                        if (!currentOnlineUserThreads.contains(xboxUser.getUserId()+xboxUser.getXboxGamertag())) {
+                            currentOnlineUserThreads.add(xboxUser.getUserId()+xboxUser.getXboxGamertag());
                             xboxInterface.getFriendsStatus(xboxUser);
-                            currentOnlineUserThreads.remove(xboxUser.getXboxGamertag());
+                            currentOnlineUserThreads.remove(xboxUser.getUserId()+xboxUser.getXboxGamertag());
                         }
                     }
                 }
@@ -133,10 +133,10 @@ public class ServerUtil {
                     @Override
                     public void run() {
                         for (Person steamUser : steamUsersToPoll) {
-                            if (!currentLibraryThreads.contains(steamUser.getSteamIdentifier())) {
-                                currentLibraryThreads.add(steamUser.getSteamIdentifier());
+                            if (!currentLibraryThreads.contains(steamUser.getUserId()+steamUser.getSteamIdentifier())) {
+                                currentLibraryThreads.add(steamUser.getUserId()+steamUser.getSteamIdentifier());
                                 steamInterface.getGameLibrary(steamUser);
-                                currentLibraryThreads.remove(steamUser.getSteamIdentifier());
+                                currentLibraryThreads.remove(steamUser.getUserId()+steamUser.getSteamIdentifier());
                             }
                         }
                     }
@@ -196,10 +196,10 @@ public class ServerUtil {
 //
 //
 //                        }
-                        if (!currentOnlineUserThreads.contains(steamUser.getSteamIdentifier())) {
-                            currentOnlineUserThreads.add(steamUser.getSteamIdentifier());
+                        if (!currentOnlineUserThreads.contains(steamUser.getUserId()+steamUser.getSteamIdentifier())) {
+                            currentOnlineUserThreads.add(steamUser.getUserId()+steamUser.getSteamIdentifier());
                             steamInterface.getFriendsStatus(steamUser);
-                            currentOnlineUserThreads.remove(steamUser.getSteamIdentifier());
+                            currentOnlineUserThreads.remove(steamUser.getUserId()+steamUser.getSteamIdentifier());
                         }
                     }
                 }
@@ -234,10 +234,10 @@ public class ServerUtil {
                                         if (!StringUtils.isEmpty(newUser.getXboxGamertag())) {
                                             newUser.setXboxIdentifier(xboxAPIRequest.getIdentifier(newUser));
 
-                                            if (!currentLibraryThreads.contains(newUser.getXboxGamertag())) {
-                                                currentLibraryThreads.add(newUser.getXboxGamertag());
+                                            if (!currentLibraryThreads.contains(newUser.getUserId()+newUser.getXboxGamertag())) {
+                                                currentLibraryThreads.add(newUser.getUserId()+newUser.getXboxGamertag());
                                                 xboxAPIRequest.getGameLibrary(newUser);
-                                                currentLibraryThreads.remove(newUser.getXboxGamertag());
+                                                currentLibraryThreads.remove(newUser.getUserId()+newUser.getXboxGamertag());
                                             }
                                         }
                                     }
@@ -250,10 +250,11 @@ public class ServerUtil {
 
                                     for (Person newUser : users) {
                                         if (!StringUtils.isEmpty(newUser.getSteamIdentifier())) {
-                                            if (!currentLibraryThreads.contains(newUser.getSteamIdentifier())) {
-                                                currentLibraryThreads.add(newUser.getSteamIdentifier());
+                                            newUser.setSteamIdentifier(newUser.getSteamIdentifier().trim());
+                                            if (!currentLibraryThreads.contains(newUser.getUserId()+newUser.getSteamIdentifier())) {
+                                                currentLibraryThreads.add(newUser.getUserId()+newUser.getSteamIdentifier());
                                                 steamInterface.getGameLibrary(newUser);
-                                                currentLibraryThreads.remove(newUser.getSteamIdentifier());
+                                                currentLibraryThreads.remove(newUser.getUserId()+newUser.getSteamIdentifier());
                                             }
                                         }
                                     }
@@ -266,10 +267,11 @@ public class ServerUtil {
 
                                     for (Person newUser : users) {
                                         if (!StringUtils.isEmpty(newUser.getSteamIdentifier())) {
-                                            if (!currentOnlineUserThreads.contains(newUser.getSteamIdentifier())) {
-                                                currentOnlineUserThreads.add(newUser.getSteamIdentifier());
+                                            newUser.setSteamIdentifier(newUser.getSteamIdentifier().trim());
+                                            if (!currentOnlineUserThreads.contains(newUser.getUserId()+newUser.getSteamIdentifier())) {
+                                                currentOnlineUserThreads.add(newUser.getUserId()+newUser.getSteamIdentifier());
                                                 steamInterface.getFriendsStatus(newUser);
-                                                currentOnlineUserThreads.remove(newUser.getSteamIdentifier());
+                                                currentOnlineUserThreads.remove(newUser.getUserId()+newUser.getSteamIdentifier());
                                             }
                                         }
                                     }
@@ -283,10 +285,10 @@ public class ServerUtil {
                                     for (Person newUser : users) {
                                         if (!StringUtils.isEmpty(newUser.getXboxGamertag())) {
                                             newUser.setXboxIdentifier(xboxAPIRequest.getIdentifier(newUser));
-                                            if (!currentOnlineUserThreads.contains(newUser.getXboxGamertag())) {
-                                                currentOnlineUserThreads.add(newUser.getXboxGamertag());
+                                            if (!currentOnlineUserThreads.contains(newUser.getUserId()+newUser.getXboxGamertag())) {
+                                                currentOnlineUserThreads.add(newUser.getUserId()+newUser.getXboxGamertag());
                                                 xboxAPIRequest.getFriendsStatus(newUser);
-                                                currentOnlineUserThreads.remove(newUser.getXboxGamertag());
+                                                currentOnlineUserThreads.remove(newUser.getUserId()+newUser.getXboxGamertag());
                                             }
                                         }
                                     }

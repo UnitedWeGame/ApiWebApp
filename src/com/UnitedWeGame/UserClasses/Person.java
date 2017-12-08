@@ -44,7 +44,7 @@ public class Person {
     }
 
     public String getSteamIdentifier() {
-        return steamIdentifier;
+        return steamIdentifier.trim();
     }
 
     public void setSteamIdentifier(String steamIdentifier) {
